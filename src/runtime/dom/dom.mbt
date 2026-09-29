@@ -180,14 +180,21 @@ pub fn attr_handler(handler : (@js.Any) -> Unit) -> @luna_dom.AttrValue {
 }
 
 ///|
-extern "js" fn attach_event_modifiers(
+extern "js" fn attach_event_modifiers_ffi(
   handler : (@js.Any) -> Unit,
-  modifiers : Array[String],
+  modifiers : FixedArray[String],
 ) -> (@js.Any) -> Unit =
   #| (handler, modifiers) => {
   #|   handler.__vaporMoonModifiers = modifiers.slice();
   #|   return handler;
   #| }
+
+fn attach_event_modifiers(
+  handler : (@js.Any) -> Unit,
+  modifiers : Array[String],
+) -> (@js.Any) -> Unit {
+  attach_event_modifiers_ffi(handler, FixedArray::from_array(modifiers))
+}
 
 ///|
 /// Attach event modifiers like `stop` or `prevent` to a handler value.
@@ -238,9 +245,9 @@ pub fn dynStyle(getter : () -> String) -> @luna_dom.AttrValue {
 }
 
 ///|
-extern "js" fn apply_select_multiple_selected(
+extern "js" fn apply_select_multiple_selected_ffi(
   elem : @js.Any,
-  values : Array[String],
+  values : FixedArray[String],
 ) -> Unit =
   #| (elem, values) => {
   #|   const want = new Set(values);
@@ -251,10 +258,17 @@ extern "js" fn apply_select_multiple_selected(
   #|   }
   #| }
 
-///|
-extern "js" fn install_select_multiple_listener(
+fn apply_select_multiple_selected(
   elem : @js.Any,
-  setter : (Array[String]) -> Unit,
+  values : Array[String],
+) -> Unit {
+  apply_select_multiple_selected_ffi(elem, FixedArray::from_array(values))
+}
+
+///|
+extern "js" fn install_select_multiple_listener_ffi(
+  elem : @js.Any,
+  setter : (FixedArray[String]) -> Unit,
 ) -> Unit =
   #| (elem, setter) => {
   #|   const onChange = () => {
@@ -269,6 +283,13 @@ extern "js" fn install_select_multiple_listener(
   #|   };
   #|   elem.addEventListener("change", onChange);
   #| }
+
+fn install_select_multiple_listener(
+  elem : @js.Any,
+  setter : (Array[String]) -> Unit,
+) -> Unit {
+  install_select_multiple_listener_ffi(elem, fn(__a1) { setter(Array::from_fixed_array(__a1)) })
+}
 
 ///|
 /// Lower a `<select multiple v-model="xs">` binding to a runtime loop:
